@@ -1,36 +1,59 @@
-from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template,request,redirect,url_for
+import sqlite3
 
 
-# Flask uygulamasını oluşturuyoruz. __name__ özel bir Python değişkenidir
-# ve Flask'a uygulamanın nerede olduğunu söyler.
-app = Flask(__name__)
+app = Flask(__name__) #flask web örneği oluşturur
 
-# Bu, bir URL'nin ("/") nasıl bir fonksiyonla eşleştiğini tanımlar.
-# Kullanıcı web sitemizin ana sayfasını ziyaret ettiğinde bu fonksiyon çalışacak.
+def get_db_connection():
+    conn=sqlite3.connect('instance/crm.db')
+    conn.row_factory = sqlite3.Row #database den gelen sonuçları hem (satır[0]) hemde  (satır['sirket_adı']) olarak tutar
+    return conn
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///crm.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Veritabanı şemasını kontrol eden ve güncelleyen fonksiyon
+def check_and_update_schema():
+    conn = get_db_connection()
+    cursor = conn.execute("PRAGMA table_info(musteriler)")
+    columns = [row['name'] for row in cursor.fetchall()]
+    schema_changed = False
+    
+    # 'yetkili_kisi' sütunu eksikse, tabloya ekle
+    if 'yetkili_kisi' not in columns:
+        print("Veritabanı şeması güncelleniyor: 'musteriler' tablosuna 'yetkili_kisi' sütunu ekleniyor.")
+        conn.execute('ALTER TABLE musteriler ADD COLUMN yetkili_kisi TEXT')
+        schema_changed = True
 
-db= SQLAlchemy(app)
+    # Eğer şemada bir değişiklik yapıldıysa, veritabanına kaydet
+    if schema_changed:
+        conn.commit()
+        
+    conn.close()
 
-class Musteri(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    sirket_adi = db.Column(db.String(100), nullable=False)
-    yetkili_kisi = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True ,nullable=False)
-    telefon= db.Column(db.String(20))
+check_and_update_schema()
 
-    def __repr__(self):
-        return f'<Manager {self.sirket_adi}>'
+#mainpage
 @app.route('/')
-def anasayfa():
+def index():
     return render_template('main_page.html')
 
-# Bu blok, dosyanın doğrudan çalıştırıldığından emin olmamızı sağlar.
-# Yani, bu dosyayı çalıştırdığımızda aşağıdaki kodlar devreye girer.
-if __name__ == '__main__':
-    # Uygulamayı geliştirme modunda (debug=True) başlatır.
-    # Bu, kodda değişiklik yaptığınızda sunucunun otomatik olarak
-    # yeniden başlayacağı ve hata ayıklamanın kolaylaşacağı anlamına gelir.
+@app.route('/musteri/ekle' , methods=['GET','POST']) #URL nin 2 tür isteği kabul edeceğini belirtir
+def musteri_ekle():
+    if request.method == 'POST':
+        sirket_adi = request.form['sirket_adi']
+        yetkili_kisi = request.form['yetkili_kisi']
+        email = request.form['email']
+        telefon = request.form['telefon']
+
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO musteriler (sirket_adi, yetkili_kisi, email, telefon) VALUES (?, ?, ?, ?)',
+            (sirket_adi, yetkili_kisi, email, telefon)
+        ) # INSERT INTO = SQL komutuyla bu dataları database e yeri bir müşteri ekler
+          #VALUES bölümünde ? ,? ,? ,? bölümü sql enjeksiyonunu engellemeye yarar
+        conn.commit()
+        conn.close()
+        return redirect(url_for('index'))
+
+    return render_template('musteri_ekle.html')
+
+if __name__=='__main__':
     app.run(debug=True)
