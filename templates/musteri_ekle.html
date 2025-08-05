@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            background-color: #323232;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            font-family: sans-serif;
+        }
+        .container{
+            display: grid;
+            width: 500px;
+            background-color: #bababa;
+            padding: 2em;
+            border-radius: 10px;
+            gap: 1em;
+            border: none;
+        }
+        .container-box {
+            display:grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label{
+            justify-content: end;
+            width: 5.5em;
+
+        }
+
+        input{
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border:none;
+            border-radius:10px;
+        }
+        button{
+            justify-content: center;
+            margin-top:1em;
+            padding: 1em 2em;
+            background-color: #ffa600;
+            color:black;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover{
+            background-color: #9d6600;
+        }
+
+    </style>
+</head>
+<body>
+    <form action="/musteri/ekle" method="POST" >
+        <h1>Merhaba</h1>
+        <div class="container">
+
+            <div class="container-box">
+                <label for="sirket_adi">Sirket Adı: </label>
+                <input type="text" name="sirket_adi" id="sirket_adi">
+            </div>
+            <div class="container-box">
+                <label for="yetkili_kisi">Yetkili Kisi: </label>
+                <input type="text" name="yetkili_kisi" id="yetkili_kisi">
+            </div>
+            <div class="container-box">
+                <label for="email">E Mail :</label>
+                <input type="text" id="email">
+            </div>
+            <div class="container-box">
+                <label for="telefon">Telefon :</label>
+                <input type="text" id="telefon">
+            </div>
+            <button type="submit">Kaydet</button>
+        </div>
+
+    </form>
+</body>
+</html>
